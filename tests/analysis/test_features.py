@@ -5,7 +5,6 @@ from core.analysis.config import AnalysisConfig
 from core.analysis.features import (
     FEATURE_LEVELS,
     encode,
-    facing_size_bucket,
     feature_values,
     stack_bucket,
     translate_action,
@@ -18,26 +17,10 @@ CONFIG = AnalysisConfig()
 
 @pytest.mark.parametrize(
     "eff, bucket",
-    [(5, "<20"), (19.99, "<20"), (20, "20-30"), (29.9, "20-30"), (30, "30-45"), (40, "30-45"), (45, "45+"), (120, "45+")],
+    [(5, "<30"), (29.99, "<30"), (30, "30-35"), (34.9, "30-35"), (35, "35-45"), (40, "35-45"), (45, "45+"), (120, "45+")],
 )
 def test_stack_bucket(eff, bucket):
     assert stack_bucket(eff, CONFIG.stack_edges) == bucket
-
-
-@pytest.mark.parametrize(
-    "line, bucket",
-    [
-        ("", "none"),
-        ("UTG:F,UTG1:F", "none"),
-        ("UTG:F,CO:R2.2", "<2.5"),
-        ("CO:R2.5", "2.5-3.5"),
-        ("CO:R2.2,BTN:R7", "3.5+"),  # отвечаем на последний рейз
-        ("CO:R2.2,BTN:C2.2", "<2.5"),
-        ("CO:R40ai", "3.5+"),
-    ],
-)
-def test_facing_size_bucket(line, bucket):
-    assert facing_size_bucket(line, CONFIG.facing_edges) == bucket
 
 
 def test_bucket_labels_follow_config():
@@ -79,8 +62,8 @@ def test_feature_values():
     )
     assert values == {
         "position": "BB",
-        "stack": "20-30",
-        "facing": "<2.5",
+        "stack": "<30",
+        "facing": "open",
         "hand_group": "suited_connector",
         "zone": "pure",
         "stage": "unknown",
@@ -91,22 +74,22 @@ def test_feature_values():
 
 
 def row(**overrides):
-    base = {"position": "UTG", "stack": "30-45", "facing": "none", "hand_group": "pair", "zone": "mix", "stage": "unknown"}
+    base = {"position": "UTG", "stack": "35-45", "facing": "none", "hand_group": "pair", "zone": "mix", "stage": "unknown"}
     base.update(overrides)
     return base
 
 
 def test_reference_levels_come_first():
     assert FEATURE_LEVELS["position"][0] == "UTG"
-    assert FEATURE_LEVELS["stack"][0] == "30-45"  # номинальный стек 40bb
-    assert FEATURE_LEVELS["facing"][0] == "none"
+    assert FEATURE_LEVELS["stack"] == ["35-45", "<30", "30-35", "45+"]  # номинальный 40bb — первым
+    assert FEATURE_LEVELS["facing"] == ["none", "open", "3bet", "4bet", "jam"]
     assert FEATURE_LEVELS["zone"][0] == "mix"
     assert FEATURE_LEVELS["stage"][0] == "unknown"
 
 
 def test_encode_one_hot_with_intercept_and_dropped_reference():
-    X, names = encode([row(), row(position="BTN", stage="bubble"), row(stack="<20")])
-    assert names == ["intercept", "position=BTN", "stack=<20", "stage=bubble"]
+    X, names = encode([row(), row(position="BTN", stage="bubble"), row(stack="<30")])
+    assert names == ["intercept", "position=BTN", "stack=<30", "stage=bubble"]
     assert X.tolist() == [
         [1, 0, 0, 0],
         [1, 1, 0, 1],

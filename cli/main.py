@@ -3,9 +3,8 @@
     python -m cli.main --db preflop.sqlite init-db
     python -m cli.main --db preflop.sqlite import hands.txt --hero Hero
     python -m cli.main --db preflop.sqlite load-charts charts/btn_rfi.yaml
-    python -m cli.main --db preflop.sqlite analyze --chart-set 1 --mapping-version v1 [--config analysis.yaml]
-
-Команды remap пока нет: маппинг решений на узлы ждёт сетку узлов (тикеты 06, 15).
+    python -m cli.main --db preflop.sqlite remap --chart-set 1
+    python -m cli.main --db preflop.sqlite analyze --chart-set 1 --mapping-version <версия из remap> [--config analysis.yaml]
 """
 
 import argparse
@@ -24,6 +23,8 @@ from core.charts.format import ChartValidationError, load_chart_file
 from core.charts.store import save_chart_set
 from core.db import make_engine
 from core.db.persist import import_hands
+from core.mapping.distance import MappingConfig
+from core.mapping.remap import remap
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -55,6 +56,10 @@ def _parser() -> argparse.ArgumentParser:
     charts = commands.add_parser("load-charts", help="загрузить набор чартов (JSON/YAML)")
     charts.add_argument("file", type=Path)
     charts.set_defaults(handler=_load_charts)
+
+    remap_cmd = commands.add_parser("remap", help="привязать решения к узлам набора чартов")
+    remap_cmd.add_argument("--chart-set", type=int, required=True)
+    remap_cmd.set_defaults(handler=_remap)
 
     analyze = commands.add_parser("analyze", help="прогнать анализ")
     analyze.add_argument("--chart-set", type=int, required=True)
@@ -94,6 +99,17 @@ def _load_charts(session: Session, args) -> int:
     session.commit()
     note = "" if row.eligible_for_analysis else ", not eligible for analysis"
     print(f"chart set {row.id}: {chart.source}@{chart.version}, {len(chart.nodes)} nodes{note}")
+    return 0
+
+
+def _remap(session: Session, args) -> int:
+    try:
+        report = remap(session, args.chart_set, MappingConfig())
+    except ValueError as error:
+        print(error, file=sys.stderr)
+        return 1
+    session.commit()
+    print(f"{report.version}: mapped {report.mapped}, far {report.far}, unmapped {report.unmapped}")
     return 0
 
 

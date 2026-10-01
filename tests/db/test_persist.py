@@ -15,6 +15,7 @@ def test_save_hand_stores_raw_text_and_every_decision(session):
     assert row.raw_text == "RAW HH"
     assert row.external_id == "1"
     assert row.ante == pytest.approx(1.0)  # анте в bb
+    assert row.ante_type == "bb"
 
     decisions = session.scalars(select(Decision).order_by(Decision.id)).all()
     assert len(decisions) == 8

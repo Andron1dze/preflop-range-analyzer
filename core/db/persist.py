@@ -19,6 +19,7 @@ def save_hand(session: Session, hand: Hand, *, source: str, raw_text: str) -> mo
         tournament_id=hand.tournament_id,
         level=hand.level,
         ante=hand.ante / hand.big_blind,
+        ante_type=hand.ante_type.value,
     )
     session.add(row)
     session.flush()

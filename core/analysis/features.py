@@ -2,7 +2,7 @@
 
 Опорный уровень признака — первый присутствующий в данных уровень в порядке
 FEATURE_LEVELS; поэтому порядок задаёт «естественную» точку отсчёта: UTG,
-номинальный стек 40bb, «нет ставки», пары, зона «микс», неизвестная стадия.
+номинальный стек 40bb, «нет рейза», пары, зона «микс», неизвестная стадия.
 """
 
 from collections.abc import Mapping, Sequence
@@ -11,6 +11,7 @@ import numpy as np
 
 from core.analysis.config import FEATURES, AnalysisConfig
 from core.db.models import STAGES
+from core.mapping.line import facing_action
 from core.model import POSITIONS_8MAX
 from core.stats.engine import HAND_GROUPS, hand_group, zone_of
 
@@ -36,16 +37,6 @@ def stack_bucket(eff_stack_bb: float, edges: Sequence[float]) -> str:
     return _bucket(eff_stack_bb, edges)
 
 
-def facing_size_bucket(line: str, edges: Sequence[float]) -> str:
-    """Размер последнего рейза в линии перед решением; "none", если рейзов не было."""
-    sizes = [
-        float(token.split(":R", 1)[1].removesuffix("ai"))
-        for token in line.split(",")
-        if ":R" in token
-    ]
-    return _bucket(sizes[-1], edges) if sizes else "none"
-
-
 def translate_action(action: str, all_in: bool, node_actions: frozenset[str]) -> str | None:
     """Действие решения → действие чарта; None, если в узле такого действия нет."""
     if action != "raise":
@@ -63,7 +54,7 @@ def feature_levels(config: AnalysisConfig) -> dict[str, list[str]]:
     return {
         "position": list(POSITIONS_8MAX),
         "stack": [nominal] + [s for s in stacks if s != nominal],
-        "facing": ["none", *bucket_labels(config.facing_edges)],
+        "facing": ["none", "open", "3bet", "4bet", "jam"],
         "hand_group": list(HAND_GROUPS),
         "zone": ["mix", "pure", "never"],
         "stage": ["unknown", *STAGES],
@@ -86,7 +77,7 @@ def feature_values(
     return {
         "position": position,
         "stack": stack_bucket(eff_stack_bb, config.stack_edges),
-        "facing": facing_size_bucket(line, config.facing_edges),
+        "facing": facing_action(line),
         "hand_group": hand_group(hand_class),
         "zone": zone_of(p_step, config.stats),
         "stage": stage or "unknown",

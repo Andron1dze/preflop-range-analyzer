@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from core.db.models import ChartSet, Decision, Hand
 
 EXPECTED_COLUMNS = {
-    "hands": {"id", "source", "raw_text", "tournament_id", "level", "ante", "imported_at"},
+    "hands": {"id", "source", "raw_text", "tournament_id", "level", "ante", "ante_type", "imported_at"},
     "decisions": {
         "id", "hand_id", "actor", "position", "hole_cards", "hand_class", "action",
         "size_bb", "size_pot", "eff_stack_bb", "all_in", "line", "stage", "stage_source", "ev_loss",

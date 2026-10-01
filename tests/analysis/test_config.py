@@ -11,8 +11,8 @@ def test_defaults():
     assert config.stats == StatsConfig()
     assert config.tree == DEFAULT_TREE
     assert config.l2 == 1.0
-    assert config.stack_edges == (20.0, 30.0, 45.0)
-    assert config.facing_edges == (2.5, 3.5)
+    assert config.stack_edges == (30.0, 35.0, 45.0)
+    assert not hasattr(config, "facing_edges")  # ставка, на которую отвечаем, — тип действия
     assert config.features == ("position", "stack", "facing", "hand_group", "zone", "stage")
 
 

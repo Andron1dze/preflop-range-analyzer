@@ -25,6 +25,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from core.db.base import Base
 
 HAND_SOURCES = ("pokerstars", "manual")
+ANTE_TYPES = ("none", "each", "bb")
 STAGES = ("early", "mid", "bubble", "itm", "ft")
 STAGE_SOURCES = ("proxy", "summary", "manual")
 RUN_STATUSES = ("pending", "running", "done", "failed")
@@ -42,6 +43,7 @@ class Hand(Base):
     __tablename__ = "hands"
     __table_args__ = (
         CheckConstraint(_one_of("source", HAND_SOURCES), name="source"),
+        CheckConstraint(_one_of("ante_type", ANTE_TYPES), name="ante_type"),
         # Повторный импорт той же раздачи не создаёт дубликат.
         UniqueConstraint("source", "external_id"),
     )
@@ -54,7 +56,9 @@ class Hand(Base):
     raw_text: Mapped[str] = mapped_column(Text)
     tournament_id: Mapped[str | None] = mapped_column(String(64))
     level: Mapped[int | None] = mapped_column(Integer)
+    # Анте в bb и кто его платит; тип пуст у раздач, импортированных до его появления.
     ante: Mapped[float | None] = mapped_column(Float)
+    ante_type: Mapped[str | None] = mapped_column(String(8))
     imported_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
 

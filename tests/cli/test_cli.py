@@ -104,3 +104,21 @@ def test_analyze_with_config(tmp_path, capsys):
     [(status, params)] = query(db, select(AnalysisRun.status, AnalysisRun.params))
     assert status == "done"
     assert params["stats"]["z_threshold"] == 3.0
+
+
+def test_remap(tmp_path, capsys):
+    db = tmp_path / "cli.sqlite"
+    cli(db, "init-db")
+    hh = tmp_path / "hands.txt"
+    hh.write_text(
+        "\n\n".join((FIXTURES / n).read_text(encoding="utf-8") for n in ("rfi_each_ante.txt", "threebet_jam_bb_ante.txt")),
+        encoding="utf-8",
+    )
+    cli(db, "import", str(hh), "--hero", "Hero")
+    cli(db, "load-charts", str(Path(__file__).parents[2] / "charts" / "40bb_core.yaml"))
+    capsys.readouterr()
+
+    assert cli(db, "remap", "--chart-set", "1") == 0
+    # Раздача 1: UTG и BTN открываются в узлы чарта; BB (25bb против 2.2bb) — w = 0.099 → далёкий.
+    # Остальные 14 решений обеих раздач в узлы чарта не попадают.
+    assert "grid-v1/cs1/sigma=0.223144/cutoff=0.1: mapped 2, far 1, unmapped 14" in capsys.readouterr().out

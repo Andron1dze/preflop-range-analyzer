@@ -17,19 +17,16 @@ class AnalysisConfig:
     stats: StatsConfig = field(default_factory=StatsConfig)
     tree: tuple[TreeStep, ...] = DEFAULT_TREE
     l2: float = 1.0
-    # Временные бакеты до решения по сетке узлов (тикет 15), в bb.
-    stack_edges: tuple[float, ...] = (20.0, 30.0, 45.0)
-    # Размер ставки, на которую отвечает игрок, в bb.
-    facing_edges: tuple[float, ...] = (2.5, 3.5)
+    # Бакеты эффективного стека вокруг номинальных 40bb (тикет 15), в bb.
+    stack_edges: tuple[float, ...] = (30.0, 35.0, 45.0)
     features: tuple[str, ...] = FEATURES
 
     def __post_init__(self):
         if self.l2 < 0:
             raise ValueError("l2 must be non-negative")
-        for name in ("stack_edges", "facing_edges"):
-            edges = getattr(self, name)
-            if not edges or any(e <= 0 for e in edges) or list(edges) != sorted(set(edges)):
-                raise ValueError(f"{name} must be positive and strictly increasing")
+        edges = self.stack_edges
+        if not edges or any(e <= 0 for e in edges) or list(edges) != sorted(set(edges)):
+            raise ValueError("stack_edges must be positive and strictly increasing")
         unknown = set(self.features) - set(FEATURES)
         if unknown or not self.features:
             raise ValueError(f"features must be a non-empty subset of {FEATURES}, got unknown {sorted(unknown)}")
@@ -49,7 +46,6 @@ class AnalysisConfig:
             },
             "l2": self.l2,
             "stack_edges": list(self.stack_edges),
-            "facing_edges": list(self.facing_edges),
             "features": list(self.features),
         }
 
@@ -69,9 +65,8 @@ class AnalysisConfig:
             kwargs["tree"] = load_tree(mapping["tree"])
         if "l2" in mapping:
             kwargs["l2"] = float(mapping["l2"])
-        for name in ("stack_edges", "facing_edges"):
-            if name in mapping:
-                kwargs[name] = tuple(float(x) for x in mapping[name])
+        if "stack_edges" in mapping:
+            kwargs["stack_edges"] = tuple(float(x) for x in mapping["stack_edges"])
         if "features" in mapping:
             kwargs["features"] = tuple(mapping["features"])
         return cls(**kwargs)
