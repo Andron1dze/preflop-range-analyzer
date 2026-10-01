@@ -60,7 +60,7 @@ def run_analysis(
     session.flush()
     try:
         with session.begin_nested():
-            items = _load_items(session, chart_set_id, mapping_version)
+            items = load_items(session, chart_set_id, mapping_version)
             _node_stats(session, run.id, items, config)
             _regression(session, run.id, items, config)
     except Exception:
@@ -72,7 +72,8 @@ def run_analysis(
     return run
 
 
-def _load_items(session: Session, chart_set_id: int, mapping_version: str) -> list[_Item]:
+def load_items(session: Session, chart_set_id: int, mapping_version: str) -> list[_Item]:
+    """Решения героя версии маппинга, привязанные к узлам набора, в словаре действий чарта."""
     rows = session.execute(
         select(Decision, DecisionNodeMap.node_id, DecisionNodeMap.weight)
         .join(DecisionNodeMap, DecisionNodeMap.decision_id == Decision.id)

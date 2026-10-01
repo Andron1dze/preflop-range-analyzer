@@ -1,0 +1,7 @@
+{% from "macros.html" import hand_grid %}
+{{ hand_grid(rows) }}
+<div class="legend">
+  <span><span class="swatch" style="background: var(--over)"></span> «{{ action }}» чаще GTO</span>
+  <span><span class="swatch" style="background: var(--under)"></span> реже GTO</span>
+  <span>Насыщенность — величина отклонения частоты; бледные — рук не было.</span>
+</div>

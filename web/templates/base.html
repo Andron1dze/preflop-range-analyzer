@@ -12,11 +12,13 @@
     :root {
       --bg: #f7f7f5; --surface: #ffffff; --text: #1d1d1b; --muted: #6b6b66;
       --border: #e2e1dc; --accent: #2f6f4f; --danger: #a33a2c; --ok: #2f6f4f;
+      --over: #c0533f; --under: #3d6fb0;
     }
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #161615; --surface: #1f1f1d; --text: #ecebe6; --muted: #9a9993;
         --border: #34332f; --accent: #6fbf8f; --danger: #e07a6a; --ok: #6fbf8f;
+        --over: #e07a6a; --under: #7aa6e0;
       }
     }
     * { box-sizing: border-box; }
@@ -40,6 +42,22 @@
     .status-failed { color: var(--danger); }
     .table-wrap { overflow-x: auto; }
     ul.log { margin: 0; padding-left: 18px; }
+    a { color: var(--accent); }
+    tr.leak td { font-weight: 600; }
+    tr.leak td.z { color: var(--danger); }
+    tr.node-detail > td { padding: 0 8px 8px; border-bottom: 1px solid var(--border); }
+    details summary { cursor: pointer; color: var(--muted); }
+    details[open] summary { margin-bottom: 8px; }
+    .num { text-align: right; }
+    .sig td { font-weight: 600; }
+    .grid { border-collapse: separate; border-spacing: 2px; width: auto; }
+    .grid td.cell { width: 2.6em; height: 2.2em; text-align: center; font-size: 12px; padding: 0;
+                    border: none; border-radius: 3px; background: var(--surface); }
+    .grid td.over  { background: color-mix(in srgb, var(--over) var(--strength), var(--surface)); }
+    .grid td.under { background: color-mix(in srgb, var(--under) var(--strength), var(--surface)); }
+    .grid td.empty { color: var(--muted); opacity: .5; }
+    .legend { display: flex; gap: 16px; font-size: 13px; color: var(--muted); margin-top: 8px; }
+    .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; }
   </style>
 </head>
 <body>

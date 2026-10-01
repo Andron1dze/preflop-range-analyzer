@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 from core.adapters.pokerstars import parse_file
 from core.analysis.config import AnalysisConfig
 from core.analysis.pipeline import run_analysis
+from core.analysis.report import grid_layout, hand_deviations, load_report
 from core.db import make_engine
 from core.db.models import AnalysisRun, ChartSet
 from core.db.persist import import_hands
@@ -116,11 +117,40 @@ def create_app(db_path: str | Path) -> FastAPI:
             rows = session.scalars(select(AnalysisRun).order_by(AnalysisRun.id.desc())).all()
             return TEMPLATES.TemplateResponse(request, "runs.html", {"runs": rows})
 
+    @app.get("/runs/{run_id}", response_class=HTMLResponse)
+    def report(request: Request, run_id: int):
+        with Session(app.state.engine) as session:
+            data = load_report(session, run_id)
+            if data is None:
+                return _error(request, f"run {run_id} not found", 404, page=True)
+            return TEMPLATES.TemplateResponse(request, "report.html", {"report": data})
+
+    @app.get("/runs/{run_id}/grid", response_class=HTMLResponse)
+    def grid(request: Request, run_id: int, node_id: int, action: str):
+        with Session(app.state.engine) as session:
+            cells = hand_deviations(session, run_id, node_id, action)
+        if cells is None:
+            return _error(request, f"no data for run {run_id}, node {node_id}, action {action!r}", 404)
+        rows = [[_grid_cell(hand, cells[hand]) for hand in row] for row in grid_layout()]
+        return TEMPLATES.TemplateResponse(request, "grid.html", {"rows": rows, "action": action})
+
     return app
 
 
-def _error(request: Request, message: str, status: int):
-    return TEMPLATES.TemplateResponse(request, "error.html", {"message": message}, status_code=status)
+def _grid_cell(hand: str, cell) -> dict:
+    if not cell.n:
+        css, strength = "empty", 0
+    else:
+        css = "over" if cell.deviation > 0 else "under" if cell.deviation < 0 else "even"
+        # Отклонение на 0.5 частоты и больше — максимальная насыщенность.
+        strength = round(min(1.0, abs(cell.deviation) * 2) * 100)
+    title = f"{hand}: n={cell.n}, факт {cell.observed:.1f}, GTO {cell.expected:.1f}"
+    return {"hand": hand, "css": css, "strength": strength, "title": title}
+
+
+def _error(request: Request, message: str, status: int, *, page: bool = False):
+    template = "error_page.html" if page else "error.html"
+    return TEMPLATES.TemplateResponse(request, template, {"message": message}, status_code=status)
 
 
 app = create_app(os.environ.get("PREFLOP_DB", "preflop.sqlite"))

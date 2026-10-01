@@ -1,0 +1,25 @@
+{# Сетка 13×13: rows — 13 строк по 13 ячеек {hand, css, strength, title}
+   в стандартной раскладке (пары по диагонали, одномастные справа сверху, разномастные слева снизу). #}
+{% macro hand_grid(rows) %}
+<table class="grid">
+  {% for row in rows %}
+  <tr>
+    {% for cell in row %}
+    <td class="cell {{ cell.css }}" style="--strength: {{ cell.strength }}%" title="{{ cell.title }}">{{ cell.hand }}</td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+{% endmacro %}
+
+{% macro stat_rows(stats, label) %}
+{% for s in stats %}
+<tr>
+  <td>{{ s[label] }}</td>
+  <td class="num">{{ s.n }}</td>
+  <td class="num">{{ "%.1f"|format(s.observed) }}</td>
+  <td class="num">{{ "%.1f"|format(s.expected) }}</td>
+  <td class="num">{{ "%+.2f"|format(s.z) }}</td>
+</tr>
+{% endfor %}
+{% endmacro %}
