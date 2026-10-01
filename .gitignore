@@ -5,9 +5,3 @@ __pycache__/
 *.sqlite-shm
 .pytest_cache/
 *.egg-info/
-
-# Local AI agent tooling
-CLAUDE.md
-.claude/
-.agents/
-skills-lock.json
