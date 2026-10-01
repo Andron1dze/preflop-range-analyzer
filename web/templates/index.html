@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Preflop analyzer</h1>
+
+<section>
+  <h2>Импорт историй раздач (PokerStars)</h2>
+  <form hx-post="/hands" hx-encoding="multipart/form-data" hx-target="#upload-result">
+    <input type="file" name="file" accept=".txt" required>
+    <input type="text" name="hero" placeholder="Ник героя" required>
+    <button type="submit">Загрузить</button>
+  </form>
+  <div id="upload-result"></div>
+  {% if import_log %}
+  <ul class="log">
+    {% for entry in import_log %}
+    <li>{{ entry.filename }}: {{ entry.summary }}
+      {% if entry.errors %}
+      <ul>{% for error in entry.errors %}<li class="error">{{ error }}</li>{% endfor %}</ul>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+
+<section>
+  <h2>Анализ</h2>
+  {% if chart_sets %}
+  <form hx-post="/runs" hx-target="#run-result">
+    <select name="chart_set_id">
+      {% for chart_set in chart_sets %}
+      <option value="{{ chart_set.id }}" {% if not chart_set.eligible_for_analysis %}disabled{% endif %}>
+        {{ chart_set.source }}@{{ chart_set.version }}{% if not chart_set.eligible_for_analysis %} — не для анализа{% endif %}
+      </option>
+      {% endfor %}
+    </select>
+    <button type="submit">Запустить</button>
+  </form>
+  {% else %}
+  <p class="muted">Наборов чартов нет — загрузите их командой <code>load-charts</code>.</p>
+  {% endif %}
+  <div id="run-result"></div>
+</section>
+
+<section>
+  <h2>Прогоны</h2>
+  <div hx-get="/runs" hx-trigger="load, every 2s" hx-swap="innerHTML">
+    <p class="muted">Загрузка…</p>
+  </div>
+</section>
+{% endblock %}

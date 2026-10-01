@@ -1,0 +1,22 @@
+{% if runs %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>#</th><th>Начат</th><th>Чарты</th><th>Маппинг</th><th>Статус</th></tr>
+    </thead>
+    <tbody>
+      {% for run in runs %}
+      <tr>
+        <td>{{ run.id }}</td>
+        <td>{{ run.started_at.strftime("%Y-%m-%d %H:%M") if run.started_at else "" }}</td>
+        <td>{{ run.chart_set_version }}</td>
+        <td class="muted">{{ run.mapping_version }}</td>
+        <td class="status-{{ run.status }}">{{ run.status }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="muted">No analysis runs yet.</p>
+{% endif %}

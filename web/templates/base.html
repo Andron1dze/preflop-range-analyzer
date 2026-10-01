@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Preflop analyzer{% endblock %}</title>
+  {# Ответы 4xx тоже вставляются в страницу: в них текст ошибки. #}
+  <meta name="htmx-config" content='{"responseHandling":[{"code":"204","swap":false},{"code":"[234]..","swap":true,"error":false},{"code":"...","swap":false}]}'>
+  {# htmx 2.0.4 лежит в проекте: без зависимости от CDN. #}
+  <script src="/static/htmx.min.js"></script>
+  <style>
+    :root {
+      --bg: #f7f7f5; --surface: #ffffff; --text: #1d1d1b; --muted: #6b6b66;
+      --border: #e2e1dc; --accent: #2f6f4f; --danger: #a33a2c; --ok: #2f6f4f;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #161615; --surface: #1f1f1d; --text: #ecebe6; --muted: #9a9993;
+        --border: #34332f; --accent: #6fbf8f; --danger: #e07a6a; --ok: #6fbf8f;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text);
+           font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+    h1 { font-size: 22px; margin: 0 0 24px; }
+    h2 { font-size: 16px; margin: 0 0 12px; }
+    section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+              padding: 16px; margin-bottom: 16px; }
+    form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    input, select, button { font: inherit; color: inherit; background: var(--surface);
+                            border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; }
+    button { background: var(--accent); border-color: var(--accent); color: var(--surface); cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 500; }
+    .muted { color: var(--muted); }
+    .error { color: var(--danger); }
+    .status-done { color: var(--ok); }
+    .status-failed { color: var(--danger); }
+    .table-wrap { overflow-x: auto; }
+    ul.log { margin: 0; padding-left: 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
