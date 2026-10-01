@@ -11,7 +11,7 @@ from core.stats.engine import Observation, StatsConfig, analyze_node, bh_adjust,
 
 def test_weighted_expectation_variance_and_z_by_hand():
     # E = 0.2 + 0.5 + 2·0.9 = 2.5; Var = 0.16 + 0.25 + 4·0.09 = 0.77; факт = 1 + 0 + 2 = 3.
-    result = poisson_binomial_test(p=[0.2, 0.5, 0.9], did=[True, False, True], w=[1, 1, 2])
+    result = poisson_binomial_test(p=[0.2, 0.5, 0.9], did=[True, False, True], w=[1, 1, 2], exact_below=0)
     assert result.n == 3
     assert result.expected == pytest.approx(2.5)
     assert result.variance == pytest.approx(0.77)
@@ -20,7 +20,7 @@ def test_weighted_expectation_variance_and_z_by_hand():
 
 
 def test_weights_default_to_one():
-    result = poisson_binomial_test(p=[0.5, 0.5], did=[True, True])
+    result = poisson_binomial_test(p=[0.5, 0.5], did=[True, True], exact_below=0)
     assert (result.expected, result.variance, result.observed) == (1.0, 0.5, 2.0)
 
 
@@ -70,30 +70,30 @@ def test_default_epsilon():
 
 
 def test_pure_strategies_matching_expectation_give_zero():
-    assert poisson_binomial_test(p=[0.0, 1.0], did=[False, True]).z == pytest.approx(0.0, abs=1e-9)
+    assert poisson_binomial_test(p=[0.0, 1.0], did=[False, True], exact_below=0).z == pytest.approx(0.0, abs=1e-9)
 
 
 def test_pure_strategy_deviation_is_large_but_finite():
     # Частоты ограничены [ε, 1−ε]: действие с GTO-частотой 0 даёт конечный z.
-    z = poisson_binomial_test(p=[0.0, 0.0], did=[True, False]).z
+    z = poisson_binomial_test(p=[0.0, 0.0], did=[True, False], exact_below=0).z
     assert math.isfinite(z)
     assert z == pytest.approx((1 - 2 * EPS) / math.sqrt(2 * EPS * (1 - EPS)))
-    assert poisson_binomial_test(p=[1.0], did=[False]).z == pytest.approx(-math.sqrt((1 - EPS) / EPS))
+    assert poisson_binomial_test(p=[1.0], did=[False], exact_below=0).z == pytest.approx(-math.sqrt((1 - EPS) / EPS))
 
 
-def test_single_misclick_in_never_zone():
-    # Одна раздача из 500 с GTO-частотой 0: z = (1 − 500ε) / √(500ε(1−ε)) ≈ 4.25.
-    z = poisson_binomial_test(p=[0.0] * 500, did=[True] + [False] * 499).z
+def test_normal_approximation_overstates_single_misclick():
+    # Нормальное приближение: z = (1 − 500ε) / √(500ε(1−ε)) ≈ 4.25 — ложная «утечка».
+    z = poisson_binomial_test(p=[0.0] * 500, did=[True] + [False] * 499, exact_below=0).z
     assert z == pytest.approx((1 - 500 * EPS) / math.sqrt(500 * EPS * (1 - EPS)))
 
 
 def test_epsilon_is_configurable():
-    z = poisson_binomial_test(p=[0.0] * 500, did=[True] + [False] * 499, eps=0.01).z
+    z = poisson_binomial_test(p=[0.0] * 500, did=[True] + [False] * 499, eps=0.01, exact_below=0).z
     assert z == pytest.approx((1 - 5) / math.sqrt(5 * 0.99))
 
 
 def test_epsilon_zero_restores_exact_pure_strategies():
-    assert poisson_binomial_test(p=[0.0], did=[True], eps=0).z == math.inf
+    assert poisson_binomial_test(p=[0.0], did=[True], eps=0, exact_below=0).z == math.inf
 
 
 def test_inputs_are_validated():
@@ -194,3 +194,84 @@ def test_unknown_stage_share():
     rows = analyze_node([obs("AA", 1.0, True, stage_known=False), obs("KK", 1.0, True)], StatsConfig(min_sample=1))
     top = next(r for r in rows if r.zone is None and r.hand_group is None)
     assert top.unknown_stage_share == pytest.approx(0.5)
+
+
+# --- точный хвост при малом ожидаемом числе событий --------------------------
+
+
+def binom_two_sided(k, n, p):
+    from scipy.stats import binom
+
+    return min(1.0, 2 * min(binom.sf(k - 1, n, p), binom.cdf(k, n, p)))
+
+
+def test_default_exact_threshold():
+    assert StatsConfig().exact_below == 5
+
+
+def test_single_misclick_is_not_a_leak():
+    result = poisson_binomial_test(p=[0.0] * 500, did=[True] + [False] * 499)
+    assert result.exact
+    assert two_sided_p(result.z) == pytest.approx(binom_two_sided(1, 500, EPS), rel=1e-6)
+    assert abs(result.z) < StatsConfig().z_threshold
+
+
+def test_repeated_misclicks_are_a_leak():
+    result = poisson_binomial_test(p=[0.0] * 500, did=[True] * 5 + [False] * 495)
+    assert result.exact
+    assert result.z > StatsConfig().z_threshold
+
+
+def test_missing_pure_action_once_is_not_a_leak():
+    # Зеркальный случай: GTO всегда делает действие, игрок один раз не сделал — мало n − E.
+    result = poisson_binomial_test(p=[1.0] * 500, did=[False] + [True] * 499)
+    assert result.exact
+    assert -StatsConfig().z_threshold < result.z < 0
+
+
+@pytest.mark.parametrize("k", [0, 1, 2, 4, 8])
+def test_exact_tail_matches_binomial_for_equal_p(k):
+    result = poisson_binomial_test(p=[0.02] * 100, did=[True] * k + [False] * (100 - k))
+    assert result.exact
+    assert two_sided_p(result.z) == pytest.approx(binom_two_sided(k, 100, 0.02), rel=1e-6)
+    assert math.copysign(1, result.z) == math.copysign(1, k - 2) or result.z == 0
+
+
+def test_exact_tail_matches_enumeration_for_unequal_p():
+    from itertools import product
+
+    p = [0.01, 0.2, 0.05, 0.3, 0.02, 0.1]
+    did = [True, False, True, False, False, False]
+    k = sum(did)
+    upper = lower = 0.0
+    for outcome in product([0, 1], repeat=len(p)):
+        prob = math.prod(pi if o else 1 - pi for pi, o in zip(p, outcome))
+        upper += prob if sum(outcome) >= k else 0
+        lower += prob if sum(outcome) <= k else 0
+    expected = min(1.0, 2 * min(upper, lower))
+    result = poisson_binomial_test(p=p, did=did)
+    assert result.exact
+    assert two_sided_p(result.z) == pytest.approx(expected, rel=1e-9)
+
+
+def test_exact_regime_counts_without_weights():
+    result = poisson_binomial_test(p=[0.0] * 100, did=[True] + [False] * 99, w=[3.0] * 100)
+    assert result.exact
+    assert (result.expected, result.observed) == (pytest.approx(100 * EPS), 1.0)
+
+
+def test_large_expectation_uses_normal_approximation():
+    result = poisson_binomial_test(p=[0.4] * 100, did=[True] * 40 + [False] * 60)
+    assert not result.exact
+
+
+def test_extreme_exact_tail_stays_finite():
+    result = poisson_binomial_test(p=[0.0] * 400, did=[True] * 400)
+    assert result.exact
+    assert result.z > 30
+
+
+def test_node_rows_report_exact_method():
+    rows = analyze_node([obs("72o", 0.0, i == 0) for i in range(500)], StatsConfig(min_sample=1))
+    top = next(r for r in rows if r.zone is None and r.hand_group is None)
+    assert top.exact and not top.is_leak
