@@ -52,3 +52,16 @@ def test_stage_is_copied_to_decisions(session):
 
     stages = set(session.execute(select(Decision.stage, Decision.stage_source)).all())
     assert stages == {("bubble", "manual")}
+
+
+def test_all_in_flag_is_stored(session):
+    hand = make_hand(
+        folds("p1", "p2", "p3", "p4", "p5") + [("p6", "raise", 4000), ("p7", "fold", None), ("p8", "call", None)],
+        stacks={"p8": 1500},
+    )
+    save_hand(session, hand, source="pokerstars", raw_text="RAW")
+    session.flush()
+
+    flags = dict(session.execute(select(Decision.actor, Decision.all_in)).all())
+    assert flags == {"p1": False, "p2": False, "p3": False, "p4": False, "p5": False,
+                     "hero": True, "p7": False, "p8": True}

@@ -8,7 +8,7 @@ EXPECTED_COLUMNS = {
     "hands": {"id", "source", "raw_text", "tournament_id", "level", "ante", "imported_at"},
     "decisions": {
         "id", "hand_id", "actor", "position", "hole_cards", "hand_class", "action",
-        "size_bb", "size_pot", "eff_stack_bb", "line", "stage", "stage_source", "ev_loss",
+        "size_bb", "size_pot", "eff_stack_bb", "all_in", "line", "stage", "stage_source", "ev_loss",
     },
     "chart_sets": {"id", "model", "ante", "source", "version"},
     "nodes": {"id", "chart_set_id", "key", "stack_bucket", "sizing_bucket", "sizings"},
@@ -16,7 +16,7 @@ EXPECTED_COLUMNS = {
     "decision_node_map": {"decision_id", "node_id", "mapping_version", "distance", "weight"},
     "analysis_runs": {"id", "started_at", "mapping_version", "chart_set_version", "params", "status"},
     "node_stats": {
-        "run_id", "node_id", "zone", "hand_group", "n", "expected", "observed",
+        "run_id", "node_id", "action", "zone", "hand_group", "n", "expected", "observed",
         "z", "bh_q", "unknown_stage_share",
     },
     "model_coefs": {"run_id", "tree_step", "feature", "beta", "se", "ci_low", "ci_high"},

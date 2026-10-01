@@ -162,6 +162,19 @@ def zone_of(p: float, config: StatsConfig) -> str:
     return "mix"
 
 
+HAND_GROUPS = (
+    "pair",
+    "suited_broadway",
+    "suited_ace",
+    "suited_connector",
+    "suited_other",
+    "offsuit_broadway",
+    "offsuit_ace",
+    "offsuit_other",
+)
+ZONES = ("pure", "mix", "never")
+
+
 def hand_group(hand: str) -> str:
     high, low = hand[0], hand[1]
     if high == low:
@@ -181,7 +194,7 @@ def hand_group(hand: str) -> str:
 def analyze_node(observations: Sequence[Observation], config: StatsConfig) -> list[NodeStatRow]:
     """Верхний уровень узла, затем разбивка по зонам частоты и по группам рук."""
     rows = [_row(observations, None, None, config)]
-    for zone in ("pure", "mix", "never"):
+    for zone in ZONES:
         subset = [o for o in observations if zone_of(o.p, config) == zone]
         if subset:
             rows.append(_row(subset, zone, None, config))

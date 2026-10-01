@@ -18,6 +18,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    false,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -76,6 +77,8 @@ class Decision(Base):
     size_bb: Mapped[float | None] = mapped_column(Float)
     size_pot: Mapped[float | None] = mapped_column(Float)
     eff_stack_bb: Mapped[float] = mapped_column(Float)
+    # Олл-ин: рейз на весь стек сопоставляется с действием "allin" чарта.
+    all_in: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     # Нормализованная точная линия до решения.
     line: Mapped[str] = mapped_column(Text)
     stage: Mapped[str | None] = mapped_column(String(8))
@@ -162,6 +165,8 @@ class NodeStat(Base):
         ForeignKey("analysis_runs.id", ondelete="CASCADE"), index=True
     )
     node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
+    # Проверяемое действие узла: движок тестирует одно действие за раз.
+    action: Mapped[str] = mapped_column(String(16))
     zone: Mapped[str | None] = mapped_column(String(16))
     hand_group: Mapped[str | None] = mapped_column(String(32))
     n: Mapped[int] = mapped_column(Integer)

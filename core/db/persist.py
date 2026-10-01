@@ -37,6 +37,7 @@ def save_hand(session: Session, hand: Hand, *, source: str, raw_text: str) -> mo
                 size_bb=point.size_bb,
                 size_pot=point.size_pot,
                 eff_stack_bb=point.eff_stack_bb,
+                all_in=point.all_in,
                 line=point.line,
                 stage=hand.stage,
                 stage_source=hand.stage_source,
