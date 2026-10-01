@@ -1,6 +1,6 @@
 # 06 — Маппинг точной линии на узел (Вариант 3)
 
-Status: needs-triage
+Status: ready-for-agent
 Type: task
 Blocked by: 02, 04, 15
 Spec: ../spec.md §5
