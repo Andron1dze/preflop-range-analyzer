@@ -95,12 +95,16 @@ def test_decision_rejects_unknown_stage(session):
 
 @pytest.mark.parametrize("model", ["chipev", "icm:default", "icm:ft-9"])
 def test_chart_set_accepts_known_models(session, model):
-    session.add(ChartSet(model=model, ante="bb_ante", source="synthetic-test", version="1"))
+    session.add(ChartSet(
+        model=model, ante="bb:1", source="synthetic-test", version="1", eligible_for_analysis=False
+    ))
     session.flush()
 
 
 @pytest.mark.parametrize("model", ["icm", "icm:", "cev", "ICM:x", ""])
 def test_chart_set_rejects_unknown_models(session, model):
-    session.add(ChartSet(model=model, ante="bb_ante", source="synthetic-test", version="1"))
+    session.add(ChartSet(
+        model=model, ante="bb:1", source="synthetic-test", version="1", eligible_for_analysis=False
+    ))
     with pytest.raises(IntegrityError):
         session.flush()

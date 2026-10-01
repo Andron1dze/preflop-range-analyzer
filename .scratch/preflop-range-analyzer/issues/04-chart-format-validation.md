@@ -1,6 +1,6 @@
 # 04 — Канонический формат чартов и валидация
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Blocked by: 01
 Spec: ../spec.md §7
@@ -12,3 +12,20 @@ Spec: ../spec.md §7
 ## Критерии приёмки
 - Тесты на каждое правило валидации с понятным сообщением об ошибке.
 - Синтетический чарт `source: synthetic-test` загружается и помечается как непригодный для пользовательского анализа.
+
+## Comments
+
+**2026-10-01 — реализовано (TDD).** 137 тестов зелёные; правила суммы частот и пометки синтетики проверены мутациями.
+
+- `core/charts/format.py`: `load_chart_file(path)` (`.json` / `.yaml` / `.yml`), `parse_chart_set(data, tolerance=0.005) → ChartSetSpec`. Все ошибки собираются и выдаются разом в `ChartValidationError.errors`.
+- Формат: файл = один набор (`chart_set` + `nodes`).
+  - `chart_set.ante` — структура `{type: none|each|bb, size_bb}`; при `none` размер 0.
+  - `node.key` должен заканчиваться на `|HERO=<позиция>`; `stack_bb > 0`.
+  - `sizings` обязательны и непусты; если в стратегии есть `raise`, обязателен сайзинг позиции героя.
+  - `strategy`: ровно 169 классов, действия из `fold/check/call/raise/allin`, частоты в [0, 1]; отсутствующее действие = 0; сумма в пределах допуска перенормируется к 1.
+  - Дубликат узла (ключ + стек + сайзинги) — ошибка.
+- `ChartSetSpec.eligible_for_analysis` = `source != "synthetic-test"`.
+- `core/charts/store.py`: `save_chart_set()` — повторная загрузка того же `(source, version)` запрещена; нулевые частоты не хранятся; `chart_sets.ante` хранится как `"bb:1"`.
+- Новая колонка `chart_sets.eligible_for_analysis` + миграция `e8c82a324ca8` (заполняет флаг у уже загруженных наборов по источнику; проверено тестом апгрейда со строками).
+
+Временное решение до тикета 15: `nodes.stack_bucket` = точный стек (`"40bb"`), `sizing_bucket` = точные сайзинги (`"BTN:2.2"`).

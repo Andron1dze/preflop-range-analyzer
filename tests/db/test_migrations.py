@@ -2,7 +2,7 @@ from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 
 from core.db import Base, make_engine
 
@@ -38,12 +38,16 @@ def _schema(engine):
     }
 
 
-def test_upgrade_head_matches_models(tmp_path):
-    migrated = tmp_path / "migrated.sqlite"
+def _config(db_path):
     cfg = Config(str(ROOT / "alembic.ini"))
     cfg.set_main_option("script_location", str(ROOT / "migrations"))
-    cfg.set_main_option("sqlalchemy.url", f"sqlite:///{migrated.as_posix()}")
-    command.upgrade(cfg, "head")
+    cfg.set_main_option("sqlalchemy.url", f"sqlite:///{db_path.as_posix()}")
+    return cfg
+
+
+def test_upgrade_head_matches_models(tmp_path):
+    migrated = tmp_path / "migrated.sqlite"
+    command.upgrade(_config(migrated), "head")
 
     reference = make_engine(tmp_path / "reference.sqlite")
     Base.metadata.create_all(reference)
@@ -53,3 +57,26 @@ def test_upgrade_head_matches_models(tmp_path):
     finally:
         reference.dispose()
         migrated_engine.dispose()
+
+
+def test_eligibility_is_backfilled_for_existing_chart_sets(tmp_path):
+    db = tmp_path / "old.sqlite"
+    cfg = _config(db)
+    command.upgrade(cfg, "eac2cfd810ac")
+    engine = make_engine(db)
+    with engine.begin() as conn:
+        conn.execute(text(
+            "INSERT INTO chart_sets (model, ante, source, version) VALUES "
+            "('chipev', 'bb:1', 'synthetic-test', '1'), ('chipev', 'bb:1', 'solver-run', '1')"
+        ))
+    engine.dispose()
+
+    command.upgrade(cfg, "head")
+
+    engine = make_engine(db)
+    with engine.connect() as conn:
+        rows = conn.execute(text(
+            "SELECT source, eligible_for_analysis FROM chart_sets ORDER BY source"
+        )).all()
+    engine.dispose()
+    assert rows == [("solver-run", 1), ("synthetic-test", 0)]

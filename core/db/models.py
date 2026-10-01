@@ -9,6 +9,7 @@ from typing import Any
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     CheckConstraint,
     DateTime,
     Float,
@@ -96,6 +97,8 @@ class ChartSet(Base):
     ante: Mapped[str] = mapped_column(String(32))
     source: Mapped[str] = mapped_column(String(128))
     version: Mapped[str] = mapped_column(String(32))
+    # False для синтетических чартов: загружаются для тестов, в анализ не попадают.
+    eligible_for_analysis: Mapped[bool] = mapped_column(Boolean)
 
 
 class Node(Base):
