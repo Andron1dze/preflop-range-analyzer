@@ -1,0 +1,31 @@
+{
+  "id": "250000000001",
+  "tournament": "3700000001",
+  "level": 5,
+  "blinds": {"sb": 50, "bb": 100},
+  "ante": {"type": "each", "amount": 12},
+  "button": 6,
+  "seats": [
+    {"seat": 1, "player": "alpha", "stack": 4000},
+    {"seat": 2, "player": "bravo", "stack": 4100},
+    {"seat": 3, "player": "charlie", "stack": 3900},
+    {"seat": 4, "player": "Big Fish 77", "stack": 4000},
+    {"seat": 5, "player": "echo", "stack": 5200},
+    {"seat": 6, "player": "Hero", "stack": 4000},
+    {"seat": 7, "player": "golf", "stack": 6000},
+    {"seat": 8, "player": "hotel", "stack": 2500}
+  ],
+  "hero": "Hero",
+  "cards": "Ah Kh",
+  "actions": [
+    {"player": "alpha", "action": "fold"},
+    {"player": "bravo", "action": "fold"},
+    {"player": "charlie", "action": "fold"},
+    {"player": "Big Fish 77", "action": "fold"},
+    {"player": "echo", "action": "fold"},
+    {"player": "Hero", "action": "raise", "to": 220},
+    {"player": "golf", "action": "fold"},
+    {"player": "hotel", "action": "fold"}
+  ],
+  "stage": "mid"
+}

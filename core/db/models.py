@@ -23,11 +23,10 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.db.base import Base
+from core.model import STAGE_SOURCES, STAGES
 
 HAND_SOURCES = ("pokerstars", "manual")
 ANTE_TYPES = ("none", "each", "bb")
-STAGES = ("early", "mid", "bubble", "itm", "ft")
-STAGE_SOURCES = ("proxy", "summary", "manual")
 RUN_STATUSES = ("pending", "running", "done", "failed")
 
 

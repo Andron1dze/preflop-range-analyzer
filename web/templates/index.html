@@ -24,6 +24,19 @@
 </section>
 
 <section>
+  <h2>Ручной ввод раздачи</h2>
+  <p class="muted">
+    JSON или YAML: суммы в фишках, действия по порядку, <code>to</code> — итоговая ставка рейза.
+    Стадия (<code>early / mid / bubble / itm / ft</code>) обязательна.
+  </p>
+  <form hx-post="/manual" hx-target="#manual-result" class="stack">
+    <textarea name="hand" rows="18" spellcheck="false" required>{{ manual_example }}</textarea>
+    <button type="submit">Сохранить раздачу</button>
+  </form>
+  <div id="manual-result"></div>
+</section>
+
+<section>
   <h2>Анализ</h2>
   {% if chart_sets %}
   <form hx-post="/runs" hx-target="#run-result">

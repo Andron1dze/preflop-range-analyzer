@@ -3,6 +3,9 @@
 from dataclasses import dataclass, field
 from enum import StrEnum
 
+STAGES = ("early", "mid", "bubble", "itm", "ft")
+STAGE_SOURCES = ("proxy", "summary", "manual")
+
 
 class AnteType(StrEnum):
     NONE = "none"

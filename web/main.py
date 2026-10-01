@@ -6,6 +6,7 @@
 страницы только читают готовое. Конкурентное чтение во время записи держит WAL.
 """
 
+import json
 import os
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
@@ -18,6 +19,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 
+from core.adapters.manual import ManualHandError, parse_manual_text
 from core.adapters.pokerstars import parse_file
 from core.analysis.config import AnalysisConfig
 from core.analysis.pipeline import run_analysis
@@ -30,6 +32,33 @@ from core.mapping.remap import remap
 
 WEB = Path(__file__).parent
 TEMPLATES = Jinja2Templates(directory=WEB / "templates")
+
+# Пример для редактора ручного ввода: BTN открывается на 2.2bb, блайнды сбрасывают.
+MANUAL_EXAMPLE = json.dumps(
+    {
+        "id": "live-001",
+        "tournament": "Live Main Event",
+        "level": 12,
+        "blinds": {"sb": 500, "bb": 1000},
+        "ante": {"type": "bb", "amount": 1000},
+        "button": 6,
+        "seats": [
+            {"seat": n, "player": name, "stack": 40000}
+            for n, name in enumerate(["UTG", "UTG1", "LJ", "HJ", "CO", "Hero", "SB", "BB"], start=1)
+        ],
+        "hero": "Hero",
+        "cards": "AhKh",
+        "actions": [
+            *({"player": p, "action": "fold"} for p in ["UTG", "UTG1", "LJ", "HJ", "CO"]),
+            {"player": "Hero", "action": "raise", "to": 2200},
+            {"player": "SB", "action": "fold"},
+            {"player": "BB", "action": "fold"},
+        ],
+        "stage": "mid",
+    },
+    indent=2,
+    ensure_ascii=False,
+)
 
 
 @dataclass
@@ -81,7 +110,7 @@ def create_app(db_path: str | Path) -> FastAPI:
             return TEMPLATES.TemplateResponse(
                 request,
                 "index.html",
-                {"chart_sets": chart_sets, "import_log": app.state.import_log},
+                {"chart_sets": chart_sets, "import_log": app.state.import_log, "manual_example": MANUAL_EXAMPLE},
             )
 
     @app.post("/hands", response_class=HTMLResponse, status_code=202)
@@ -95,6 +124,29 @@ def create_app(db_path: str | Path) -> FastAPI:
         background.add_task(import_job, app.state.engine, text, hero, file.filename, app.state.import_log)
         return TEMPLATES.TemplateResponse(
             request, "upload_started.html", {"filename": file.filename, "hero": hero}, status_code=202
+        )
+
+    @app.post("/manual", response_class=HTMLResponse, status_code=201)
+    def save_manual(request: Request, hand: str = Form(...)):
+        try:
+            parsed = parse_manual_text(hand)
+        except ManualHandError as error:
+            return TEMPLATES.TemplateResponse(request, "manual_result.html", {"errors": error.errors}, status_code=400)
+        with Session(app.state.engine) as session:
+            report = import_hands(session, [parsed], source="manual")
+            session.commit()
+        label = parsed.hand.external_id or "без номера"
+        if report.duplicates:
+            return _error(request, f"hand {label} is already imported", 409)
+        if report.errors:
+            return TEMPLATES.TemplateResponse(
+                request, "manual_result.html", {"errors": [m for _, m in report.errors]}, status_code=400
+            )
+        return TEMPLATES.TemplateResponse(
+            request,
+            "manual_result.html",
+            {"saved": label, "decisions": len(parsed.hand.actions), "stage": parsed.hand.stage},
+            status_code=201,
         )
 
     @app.post("/runs", response_class=HTMLResponse, status_code=202)

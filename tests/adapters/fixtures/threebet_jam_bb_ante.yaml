@@ -1,0 +1,28 @@
+# Тот же формат в YAML.
+id: "250000000002"
+tournament: "3700000001"
+level: 8
+blinds: {sb: 100, bb: 200}
+ante: {type: bb, amount: 200}
+button: 6
+seats:
+  - {seat: 1, player: alpha, stack: 8200}
+  - {seat: 2, player: bravo, stack: 7600}
+  - {seat: 3, player: charlie, stack: 9100}
+  - {seat: 5, player: Villain, stack: 8000}
+  - {seat: 6, player: Hero, stack: 9000}
+  - {seat: 7, player: golf, stack: 12000}
+  - {seat: 8, player: hotel, stack: 6400}
+hero: Hero
+cards: AcAd
+actions:
+  - {player: alpha, action: fold}
+  - {player: bravo, action: fold}
+  - {player: charlie, action: fold}
+  - {player: Villain, action: raise, to: 440}
+  - {player: Hero, action: raise, to: 1300}
+  - {player: golf, action: fold}
+  - {player: hotel, action: fold}
+  - {player: Villain, action: raise, to: 8000}
+  - {player: Hero, action: call}
+stage: bubble
