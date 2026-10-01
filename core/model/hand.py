@@ -51,3 +51,12 @@ class Hand:
     actions: list[Action] = field(default_factory=list)
     stage: str | None = None
     stage_source: str | None = None
+
+
+@dataclass
+class ParsedHand:
+    """Результат любого адаптера: раздача и её сырьё для ре-парсинга."""
+
+    hand: Hand
+    # Текст HH или сериализованная форма ручного ввода.
+    raw_text: str

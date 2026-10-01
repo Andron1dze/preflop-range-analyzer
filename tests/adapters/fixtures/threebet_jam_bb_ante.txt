@@ -1,0 +1,41 @@
+PokerStars Hand #250000000002: Tournament #3700000001, $10+$1 USD Hold'em No Limit - Level VIII (100/200) - 2026/09/30 21:02:11 ET
+Table '3700000001 12' 8-max Seat #6 is the button
+Seat 1: alpha (8200 in chips)
+Seat 2: bravo (7600 in chips)
+Seat 3: charlie (9100 in chips)
+Seat 5: Villain (8000 in chips)
+Seat 6: Hero (9000 in chips)
+Seat 7: golf (12000 in chips)
+Seat 8: hotel (6400 in chips)
+hotel: posts the ante 200
+golf: posts small blind 100
+hotel: posts big blind 200
+*** HOLE CARDS ***
+Dealt to Hero [Ac Ad]
+alpha: folds
+bravo: folds
+charlie: folds
+Villain: raises 240 to 440
+Hero: raises 860 to 1300
+golf: folds
+hotel: folds
+Villain: raises 6700 to 8000 and is all-in
+Hero: calls 6700
+*** FLOP *** [2c 7d Js]
+*** TURN *** [2c 7d Js] [9h]
+*** RIVER *** [2c 7d Js 9h] [3s]
+*** SHOW DOWN ***
+Villain: shows [Qs Qd] (a pair of Queens)
+Hero: shows [Ac Ad] (a pair of Aces)
+Hero collected 16500 from pot
+Villain finished the tournament in 412th place
+*** SUMMARY ***
+Total pot 16500 | Rake 0
+Board [2c 7d Js 9h 3s]
+Seat 1: alpha folded before Flop (didn't bet)
+Seat 2: bravo folded before Flop (didn't bet)
+Seat 3: charlie folded before Flop (didn't bet)
+Seat 5: Villain showed [Qs Qd] and lost with a pair of Queens
+Seat 6: Hero (button) showed [Ac Ad] and won (16500) with a pair of Aces
+Seat 7: golf (small blind) folded before Flop
+Seat 8: hotel (big blind) folded before Flop

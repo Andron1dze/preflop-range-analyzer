@@ -1,6 +1,6 @@
 """Внутренняя модель раздачи (по образцу PHH)."""
 
-from core.model.hand import Action, ActionKind, AnteType, Hand, Seat
+from core.model.hand import Action, ActionKind, AnteType, Hand, ParsedHand, Seat
 from core.model.positions import POSITIONS_8MAX, assign_positions
 
 __all__ = [
@@ -9,6 +9,7 @@ __all__ = [
     "ActionKind",
     "AnteType",
     "Hand",
+    "ParsedHand",
     "Seat",
     "assign_positions",
 ]

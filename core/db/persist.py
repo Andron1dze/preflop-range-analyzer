@@ -1,7 +1,11 @@
+from collections.abc import Iterable
+from dataclasses import dataclass, field
+
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.db import models
-from core.model import Hand
+from core.model import Hand, ParsedHand
 from core.normalize.hand_class import hand_class
 from core.normalize.preflop import normalize
 
@@ -39,3 +43,41 @@ def save_hand(session: Session, hand: Hand, *, source: str, raw_text: str) -> mo
             )
         )
     return row
+
+
+@dataclass
+class ImportReport:
+    imported: int = 0
+    duplicates: int = 0
+    # (external_id, сообщение) раздач, которые не прошли нормализацию.
+    errors: list[tuple[str | None, str]] = field(default_factory=list)
+
+
+def import_hands(session: Session, parsed: Iterable[ParsedHand], *, source: str) -> ImportReport:
+    """Сохраняет разобранные раздачи, пропуская уже импортированные. Коммит — на вызывающем."""
+    parsed = list(parsed)
+    ids = {p.hand.external_id for p in parsed if p.hand.external_id is not None}
+    seen = set(
+        session.scalars(
+            select(models.Hand.external_id).where(
+                models.Hand.source == source, models.Hand.external_id.in_(ids)
+            )
+        )
+    )
+
+    report = ImportReport()
+    for item in parsed:
+        external_id = item.hand.external_id
+        if external_id is not None and external_id in seen:
+            report.duplicates += 1
+            continue
+        try:
+            # Savepoint: раздача, упавшая на нормализации, не оставляет частичных строк.
+            with session.begin_nested():
+                save_hand(session, item.hand, source=source, raw_text=item.raw_text)
+        except ValueError as error:
+            report.errors.append((external_id, str(error)))
+            continue
+        seen.add(external_id)
+        report.imported += 1
+    return report

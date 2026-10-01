@@ -1,0 +1,44 @@
+PokerStars Hand #250000000001: Tournament #3700000001, $10+$1 USD Hold'em No Limit - Level V (50/100) - 2026/09/30 20:15:32 ET
+Table '3700000001 12' 8-max Seat #6 is the button
+Seat 1: alpha (4000 in chips)
+Seat 2: bravo (4100 in chips)
+Seat 3: charlie (3900 in chips)
+Seat 4: Big Fish 77 (4000 in chips)
+Seat 5: echo (5200 in chips)
+Seat 6: Hero (4000 in chips)
+Seat 7: golf (6000 in chips)
+Seat 8: hotel (2500 in chips) is sitting out
+alpha: posts the ante 12
+bravo: posts the ante 12
+charlie: posts the ante 12
+Big Fish 77: posts the ante 12
+echo: posts the ante 12
+Hero: posts the ante 12
+golf: posts the ante 12
+hotel: posts the ante 12
+golf: posts small blind 50
+hotel: posts big blind 100
+*** HOLE CARDS ***
+Dealt to Hero [Ah Kh]
+alpha: folds
+bravo: folds
+charlie: folds
+Big Fish 77: folds
+echo said, "gl all"
+echo: folds
+Hero: raises 120 to 220
+golf: folds
+hotel: folds
+Uncalled bet (120) returned to Hero
+Hero collected 346 from pot
+Hero: doesn't show hand
+*** SUMMARY ***
+Total pot 346 | Rake 0
+Seat 1: alpha folded before Flop (didn't bet)
+Seat 2: bravo folded before Flop (didn't bet)
+Seat 3: charlie folded before Flop (didn't bet)
+Seat 4: Big Fish 77 folded before Flop (didn't bet)
+Seat 5: echo folded before Flop (didn't bet)
+Seat 6: Hero (button) collected (346)
+Seat 7: golf (small blind) folded before Flop
+Seat 8: hotel (big blind) folded before Flop
